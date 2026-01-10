@@ -2,7 +2,7 @@
 
 This repository provides a complete hands-on guide to create an AWS EKS cluster from an EC2 instance using command-line tools.
 
-🎯 Covers:
+🎯 Covers
 
 EC2 preparation
 
@@ -166,7 +166,7 @@ kubectl get pods -n kube-system
 
 💰 Step 10 — Cost Monitoring
 
-Check resources created:
+Monitor the following resources in AWS Console:
 
 EC2 instances
 
@@ -176,7 +176,7 @@ VPC
 
 EBS volumes
 
-Use AWS Billing Dashboard.
+Use AWS Billing Dashboard to track usage.
 
 🧹 Step 11 — Cleanup (Mandatory)
 
