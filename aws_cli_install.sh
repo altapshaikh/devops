@@ -53,13 +53,13 @@ if command_exists aws; then
     print_warning "AWS CLI already installed: $AWS_VERSION"
     print_header "Updating AWS CLI v2"
     cd /tmp
-    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    curl -f "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
     unzip -o awscliv2.zip
     sudo ./aws/install --update
     rm -rf awscliv2.zip aws/
 else
     cd /tmp
-    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    curl -f "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
     unzip awscliv2.zip
     sudo ./aws/install
     rm -rf awscliv2.zip aws/
@@ -76,7 +76,7 @@ if command_exists kubectl; then
 fi
 
 cd /tmp
-curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+curl -fLO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
 sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 rm -f kubectl
 
@@ -90,11 +90,34 @@ if command_exists eksctl; then
     print_warning "eksctl already installed: $EKSCTL_VERSION"
 else
     cd /tmp
-    PLATFORM=$(uname -s)_$(uname -m)
-    curl -sLO "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$PLATFORM.tar.gz"
-    tar -xzf eksctl_$PLATFORM.tar.gz -C /tmp
-    sudo mv /tmp/eksctl /usr/local/bin/
+    # for ARM systems, set ARCH to: `arm64`, `armv6` or `armv7`
+    ARCH=$(uname -m | sed 's/x86_64/amd64/' | sed 's/aarch64/arm64/')
+    PLATFORM=$(uname -s)_$ARCH
+    
+    if ! curl -fLO "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$PLATFORM.tar.gz"; then
+        print_error "Failed to download eksctl"
+        exit 1
+    fi
+    
+    # (Optional) Verify checksum
+    if ! curl -fL "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_checksums.txt" | grep $PLATFORM | sha256sum --check; then
+        print_warning "Checksum verification skipped or failed, proceeding with installation"
+    fi
+    
+    if ! tar -xzf eksctl_$PLATFORM.tar.gz -C /tmp; then
+        print_error "Failed to extract eksctl archive"
+        rm -f eksctl_$PLATFORM.tar.gz
+        exit 1
+    fi
+    
     rm -f eksctl_$PLATFORM.tar.gz
+    
+    if ! sudo install -m 0755 /tmp/eksctl /usr/local/bin; then
+        print_error "Failed to install eksctl to /usr/local/bin"
+        exit 1
+    fi
+    
+    rm -f /tmp/eksctl
 fi
 
 EKSCTL_VERSION=$(eksctl version)
