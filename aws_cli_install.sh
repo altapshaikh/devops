@@ -71,7 +71,7 @@ print_success "AWS CLI installed: $AWS_VERSION"
 print_header "Installing kubectl v1.31.0"
 KUBECTL_VERSION="v1.31.0"
 if command_exists kubectl; then
-    CURRENT_VERSION=$(kubectl version --client --short 2>/dev/null | awk '{print $3}')
+    CURRENT_VERSION=$(kubectl version --client -o json 2>/dev/null | grep -o '"gitVersion":"[^"]*"' | cut -d'"' -f4 || echo "unknown")
     print_warning "kubectl already installed: $CURRENT_VERSION"
 fi
 
@@ -80,7 +80,7 @@ curl -fLO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
 sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 rm -f kubectl
 
-KUBECTL_VERSION_INSTALLED=$(kubectl version --client --short)
+KUBECTL_VERSION_INSTALLED=$(kubectl version --client -o json | grep -o '"gitVersion":"[^"]*"' | cut -d'"' -f4)
 print_success "kubectl installed: $KUBECTL_VERSION_INSTALLED"
 
 # Install eksctl
@@ -130,7 +130,7 @@ echo "AWS CLI:"
 aws --version
 echo ""
 echo "kubectl:"
-kubectl version --client --short
+kubectl version --client
 echo ""
 echo "eksctl:"
 eksctl version
