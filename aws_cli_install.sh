@@ -4,4 +4,3 @@ sudo apt update
 sudo apt install unzip -y
 unzip awscliv2.zip
 sudo ./aws/install
-aws --version
